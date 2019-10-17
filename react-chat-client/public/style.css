@@ -1,0 +1,126 @@
+h1 {
+  font-size: 30.4px;
+  font-style: bold;
+  font-variant: normal;
+  font-weight: 900;
+  line-height: 29.4px;
+}
+
+h2 {
+  font-size: 26px;
+  font-style: bold;
+  font-variant: normal;
+  font-weight: 700;
+  line-height: 26.4px;
+}
+
+h3 {
+  font-size: 23px;
+  font-style: bold;
+  font-variant: normal;
+  font-weight: 700;
+  line-height: 25px;
+}
+
+h4 {
+  font-size: 21px;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 700;
+  line-height: 23.2px;
+}
+
+h5 {
+  font-size: 19px;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 700;
+  line-height: 22px;
+}
+
+h6 {
+  font-size: 17px;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 700;
+  line-height: 21px;
+}
+
+p {
+  font-size: 14px;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+blockquote {
+  font-size: 21px;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 400;
+  line-height: 30px;
+}
+
+pre {
+  font-size: 13px;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 400;
+  line-height: 18.5714px;
+}
+
+html,
+body {
+  font-family: Ubuntu;
+}
+
+.body-dashboard {
+  background: #dfdfdf;
+  margin-top: 10vh;
+  margin-bottom: 10vh;
+  max-height: 80vh;
+}
+
+table th,table td {
+  vertical-align: middle !important;
+  width: auto !important
+}
+
+.table-fix-head {
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+.table-fix-head table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.table-fix-head th,
+.table-fix-head td {
+  padding: 8px 16px;
+}
+
+.table-fix-head th {
+  position: sticky;
+  top: 0;
+  background: #eee;
+}
+
+.alert.alert-server {
+  margin-bottom: 0;
+  border-radius: 0;
+}
+
+.body-dashboard {
+  display: -ms-flexbox;
+  display: -webkit-box;
+  align-items: center;
+}
+
+@media all and (max-width:576px) {
+  .rfs {
+    font-size: 4vw
+  }
+}
