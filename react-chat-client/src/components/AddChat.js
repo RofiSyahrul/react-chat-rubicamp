@@ -35,7 +35,11 @@ export default class AddChat extends React.Component {
 
   render() {
     return (
-      <form onSubmit={this.handleSubmit} className="mt-3" style={{marginLeft: "-2rem"}}>
+      <form
+        onSubmit={this.handleSubmit}
+        className="mt-3"
+        style={{ marginLeft: "-2rem" }}
+      >
         <div className="row justify-content-between align-items-center mx-1">
           <div className="col-1">
             <button
@@ -46,7 +50,7 @@ export default class AddChat extends React.Component {
               <i className="fa fa-plus-circle fa-3x"></i>
             </button>
           </div>
-          <div className="col-9 col-sm-11 speech-bubble">
+          <div className="col-9 col-sm-9 col-md-10 col-lg-11 speech-bubble">
             <div className="form-group my-2">
               <div className="input-group">
                 <div className="input-group-prepend text-center">

@@ -68,7 +68,7 @@ export default class ListChat extends React.Component {
         style={{ maxHeight: "50vh", overflowY: "auto", marginLeft: "-2rem" }}
       >
         {components}
-        <div key="ref" ref={this.props.endRef} tabIndex="-1"></div>
+        <div key="ref" ref={this.props.endRef}></div>
       </div>
     );
   }
