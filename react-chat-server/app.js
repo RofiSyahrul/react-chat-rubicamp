@@ -19,6 +19,8 @@ mongoose
   });
 
 const app = express();
+const server = require("http").Server(app);
+const io = require("socket.io")(server);
 
 app.use(logger("dev"));
 app.use(express.json());
@@ -29,5 +31,17 @@ app.use(cors());
 
 const chatRouter = require("./routes/chat");
 app.use("/api/chat", chatRouter);
+
+io.on("connection", socket => {
+  socket.on("new chat", msg => {
+    io.emit("new chat", msg);
+  });
+  socket.on("key up", sender => {
+    console.log(sender, "time:", Date.now());
+    
+    io.emit("key up", sender);
+  });
+});
+server.listen(8000);
 
 module.exports = app;
