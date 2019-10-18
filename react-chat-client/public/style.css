@@ -77,12 +77,10 @@ body {
 
 .body-dashboard {
   background: #dfdfdf;
-  margin-top: 10vh;
-  margin-bottom: 10vh;
-  max-height: 80vh;
 }
 
-table th,table td {
+table th,
+table td {
   vertical-align: middle !important;
   width: auto !important
 }
@@ -122,5 +120,19 @@ table th,table td {
 @media all and (max-width:576px) {
   .rfs {
     font-size: 4vw
+  }
+
+  .body-dashboard {
+    margin-top: 5vh;
+    margin-bottom: 0;
+    max-height: 95vh;
+  }
+}
+
+@media all and (min-width:577px) {
+  .body-dashboard {
+    margin-top: 10vh;
+    margin-bottom: 10vh;
+    max-height: 80vh;
   }
 }
