@@ -3,6 +3,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import ListChat from "./ListChat";
 import AddChat from "./AddChat";
+import { subscribeChatHistory } from "../socket";
 
 const swalWithBootstrapButtons = Swal.mixin({
   customClass: {
@@ -20,7 +21,7 @@ export default class ReactChat extends React.Component {
   }
 
   componentDidMount() {
-    this.getChats();
+    subscribeChatHistory(this.getChats);
     this.scrollToBottom();
   }
 
@@ -58,7 +59,7 @@ export default class ReactChat extends React.Component {
                 res.data.message,
                 "success"
               );
-              this.getChats();
+              subscribeChatHistory(this.getChats);
             })
             .catch(err => console.error(err));
         } else if (result.dismiss === Swal.DismissReason.cancel) {
@@ -75,7 +76,7 @@ export default class ReactChat extends React.Component {
     if (sender.length > 0 && message.length > 0) {
       axios
         .post("http://localhost:3001/api/chat", { sender, message })
-        .then(() => this.getChats())
+        .then(() => subscribeChatHistory(this.getChats))
         .catch(err => console.error(err));
     } else {
       Swal.fire({
