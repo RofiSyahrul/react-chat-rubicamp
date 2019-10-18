@@ -1,29 +1,16 @@
 import React from "react";
 import axios from "axios";
-import moment from "moment";
-import ListChatPerDate from "./ListChatPerDate";
+import Swal from "sweetalert2";
+import ListChat from "./ListChat";
+import AddChat from "./AddChat";
 
-function formatDateTerm(date) {
-  const originFormat = "YYYY-MM-DD HH:mm:ss";
-  const formatedDate = moment(date, originFormat).format("YYYY-MM-DD");
-  const year = moment(date, originFormat).format("YYYY");
-  const today = moment().format("YYYY-MM-DD");
-  const yesterday = moment()
-    .subtract(1, "d")
-    .format("YYYY-MM-DD");
-  const thisYear = moment().format("YYYY");
-  if (year === thisYear) {
-    switch (formatedDate) {
-      case today:
-        return "Today";
-      case yesterday:
-        return "Yesterday";
-      default:
-        return moment(date, originFormat).format("MMM Do");
-    }
-  }
-  return moment(date, originFormat).format("MMM Do YYYY");
-}
+const swalWithBootstrapButtons = Swal.mixin({
+  customClass: {
+    confirmButton: "btn btn-success ml-2",
+    cancelButton: "btn btn-danger"
+  },
+  buttonsStyling: false
+});
 
 export default class ReactChat extends React.Component {
   constructor(props) {
@@ -33,7 +20,7 @@ export default class ReactChat extends React.Component {
   }
 
   componentDidMount() {
-    this.getData();
+    this.getChats();
     this.scrollToBottom();
   }
 
@@ -41,13 +28,61 @@ export default class ReactChat extends React.Component {
     this.scrollToBottom();
   }
 
-  getData = () => {
+  getChats = () => {
     axios
       .get("http://localhost:3001/api/chat")
       .then(res => {
         this.setState({ chats: res.data });
       })
-      .catch(err => console.log(err));
+      .catch(err => console.error(err));
+  };
+
+  deleteChat = id => {
+    swalWithBootstrapButtons
+      .fire({
+        title: "Are you sure to delete this message?",
+        text: "You won't be able to revert this!",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, delete it!",
+        cancelButtonText: "No, cancel!",
+        reverseButtons: true
+      })
+      .then(result => {
+        if (result.value) {
+          axios
+            .delete("http://localhost:3001/api/chat/" + id)
+            .then(res => {
+              swalWithBootstrapButtons.fire(
+                "Deleted!",
+                res.data.message,
+                "success"
+              );
+              this.getChats();
+            })
+            .catch(err => console.error(err));
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+          swalWithBootstrapButtons.fire(
+            "Cancelled",
+            "Your chat is safe :)",
+            "error"
+          );
+        }
+      });
+  };
+
+  addChat = (sender = "", message = "") => {
+    if (sender.length > 0 && message.length > 0) {
+      axios
+        .post("http://localhost:3001/api/chat", { sender, message })
+        .then(() => this.getChats())
+        .catch(err => console.error(err));
+    } else {
+      Swal.fire({
+        title: "Message or sender cannot be empty",
+        type: "error"
+      });
+    }
   };
 
   setEndRef = element => {
@@ -55,26 +90,34 @@ export default class ReactChat extends React.Component {
   };
 
   scrollToBottom = () => {
-    if (this.endRef) this.endRef.scrollIntoView({behaviour: "smooth"});
+    if (this.endRef) this.endRef.scrollIntoView({ behaviour: "smooth" });
   };
 
   render() {
-    let chats = this.state.chats.map(chat => {
-      chat.date = formatDateTerm(chat.time);
-      chat.time = `${chat.date}, ${moment(
-        chat.time,
-        "YYYY-MM-DD HH:mm:ss"
-      ).format("HH:mm:ss")}`;
-      return chat;
-    });
-    let date = chats[0] ? chats[0].date : "No chats";
-
     return (
       <div className="container">
         <div className="card body-dashboard">
-          <div className="card-header bg-primary text-white h3">React Chat</div>
-          <div className="card-body bg-transparent" style={{ maxHeight: "60vh", overflowY: "auto" }}>
-            <ListChatPerDate date={date} chats={chats} endRef={this.setEndRef} />
+          <div className="card-header bg-dark text-white">
+            <div className="row justify-content-between align-items-center mx-1">
+              <span className="h3">
+                <i className="fa fa-comments-o fa-lg mx-2"></i>
+                React Chat
+              </span>
+              <p className="badge badge-light badge-pill">
+                {this.state.chats.length} messages
+              </p>
+            </div>
+          </div>
+          <div
+            className="card-body bg-transparent"
+            style={{ maxHeight: "80vh", overflowY: "auto" }}
+          >
+            <ListChat
+              chats={this.state.chats}
+              endRef={this.setEndRef}
+              remove={this.deleteChat}
+            />
+            <AddChat addChat={this.addChat} />
           </div>
         </div>
       </div>
