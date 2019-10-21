@@ -3,7 +3,9 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import ListChat from "./ListChat";
 import AddChat from "./AddChat";
-import { subscribeChatHistory } from "../socket";
+import { formatTime, groupChats } from "../helpers";
+import io from "socket.io-client";
+const socket = io("http://localhost:8000");
 
 const swalWithBootstrapButtons = Swal.mixin({
   customClass: {
@@ -16,13 +18,28 @@ const swalWithBootstrapButtons = Swal.mixin({
 export default class ReactChat extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { chats: [] };
+    this.state = { chats: [], chatsPerDate: [], typerExist: false, typer: "" };
     this.endRef = null;
   }
 
   componentDidMount() {
-    subscribeChatHistory(this.getChats);
+    this.getChats();
     this.scrollToBottom();
+
+    socket.on("delete chat", id => {
+      this.delChatClient(id);
+    });
+
+    socket.on("new chat", (id, sender, message) => {
+      this.addChatClient(id, sender, message);
+    });
+
+    socket.on("key up", typer => {
+      if (typeof typer === "string") {
+        if (typer === "") typer = "Unknown";
+        this.setState({ typerExist: true, typer });
+      } else this.setState({ typerExist: false, typer: "" });
+    });
   }
 
   componentDidUpdate() {
@@ -33,9 +50,20 @@ export default class ReactChat extends React.Component {
     axios
       .get("http://localhost:3001/api/chat")
       .then(res => {
+        // copying strategy: https://stackoverflow.com/questions/47624142/right-way-to-clone-objects-arrays-during-setstate-in-react
         this.setState({ chats: res.data });
+        let copiedChats = JSON.parse(JSON.stringify(res.data));
+        this.setState({ chatsPerDate: groupChats(copiedChats) });
       })
       .catch(err => console.error(err));
+  };
+
+  delChatClient = id => {
+    this.setState(state => ({
+      chats: state.chats.filter(chat => chat._id !== id && chat.chatId !== id)
+    }));
+    let copiedChats = JSON.parse(JSON.stringify(this.state.chats));
+    this.setState({ chatsPerDate: groupChats(copiedChats) });
   };
 
   deleteChat = id => {
@@ -51,32 +79,51 @@ export default class ReactChat extends React.Component {
       })
       .then(result => {
         if (result.value) {
+          socket.emit("delete chat", id);
           axios
             .delete("http://localhost:3001/api/chat/" + id)
             .then(res => {
-              swalWithBootstrapButtons.fire(
-                "Deleted!",
-                res.data.message,
-                "success"
-              );
-              subscribeChatHistory(this.getChats);
+              swalWithBootstrapButtons.fire({
+                title: "Deleted!",
+                text: res.data.message,
+                type: "success",
+                timer: 2000
+              });
+              // subscribeChatHistory(this.getChats)
             })
             .catch(err => console.error(err));
         } else if (result.dismiss === Swal.DismissReason.cancel) {
-          swalWithBootstrapButtons.fire(
-            "Cancelled",
-            "Your chat is safe :)",
-            "error"
-          );
+          swalWithBootstrapButtons.fire({
+            title: "Cancelled",
+            text: "Your chat is safe :)",
+            type: "error",
+            timer: 2000
+          });
         }
       });
   };
 
+  addChatClient = (id = 0, sender = "", message = "") => {
+    let newChat = {
+      chatId: id,
+      sender,
+      message,
+      time: new Date().toString()
+    };
+    this.setState(state => ({
+      chats: [...state.chats, formatTime(newChat)]
+    }));
+    let copiedChats = JSON.parse(JSON.stringify(this.state.chats));
+    this.setState({ chatsPerDate: groupChats(copiedChats) });
+  };
+
   addChat = (sender = "", message = "") => {
     if (sender.length > 0 && message.length > 0) {
+      let chatId = Date.now();
+      socket.emit("new chat", chatId, sender, message);
       axios
-        .post("http://localhost:3001/api/chat", { sender, message })
-        .then(() => subscribeChatHistory(this.getChats))
+        .post("http://localhost:3001/api/chat", { sender, message, chatId })
+        .then(() => {})
         .catch(err => console.error(err));
     } else {
       Swal.fire({
@@ -84,6 +131,10 @@ export default class ReactChat extends React.Component {
         type: "error"
       });
     }
+  };
+
+  setTyper = typer => {
+    socket.emit("key up", typer);
   };
 
   setEndRef = element => {
@@ -104,9 +155,25 @@ export default class ReactChat extends React.Component {
                 <i className="fa fa-comments-o fa-lg mx-2"></i>
                 React Chat
               </span>
-              <p className="badge badge-light badge-pill">
-                {this.state.chats.length} messages
-              </p>
+              <div className="col-auto float-right text-right">
+                <p className="badge badge-light badge-pill align-items-end text-right">
+                  {this.state.chats.length} messages
+                </p>
+                {this.state.typerExist ? <br /> : ""}
+                {this.state.typerExist ? (
+                  <p
+                    className="align-items-end"
+                    style={{
+                      marginTop: "-0.9rem",
+                      marginBottom: "-0.9rem"
+                    }}
+                  >
+                    {this.state.typer} is typing...
+                  </p>
+                ) : (
+                  ""
+                )}
+              </div>
             </div>
           </div>
           <div
@@ -114,11 +181,11 @@ export default class ReactChat extends React.Component {
             style={{ maxHeight: "80vh", overflowY: "auto" }}
           >
             <ListChat
-              chats={this.state.chats}
+              chatsPerDate={this.state.chatsPerDate}
               endRef={this.setEndRef}
               remove={this.deleteChat}
             />
-            <AddChat addChat={this.addChat} />
+            <AddChat addChat={this.addChat} setTyper={this.setTyper} />
           </div>
         </div>
       </div>

@@ -19,7 +19,8 @@ mongoose
   });
 
 const app = express();
-const server = require("http").Server(app);
+let server = require("http").Server(app);
+server = server.listen(8000);
 const io = require("socket.io")(server);
 
 app.use(logger("dev"));
@@ -38,15 +39,17 @@ const chatRouter = require("./routes/chat");
 app.use("/api/chat", chatRouter);
 
 io.on("connection", socket => {
-  socket.on("new chat", msg => {
-    io.emit("new chat", msg);
+  socket.on("new chat", (chatId, sender, message) => {
+    io.emit("new chat", chatId, sender, message);
   });
-  socket.on("key up", sender => {
-    console.log(sender, "time:", Date.now());
-    
-    io.emit("key up", sender);
+
+  socket.on("delete chat", id => {
+    io.emit("delete chat", id);
+  });
+
+  socket.on("key up", typer => {
+    socket.broadcast.emit("key up", typer);
   });
 });
-server.listen(8000);
 
 module.exports = app;

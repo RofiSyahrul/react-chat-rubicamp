@@ -17,7 +17,7 @@ class ChatItem extends React.Component {
             <button
               type="button"
               className={`${this.props.color} btn bg-transparent`}
-              id={`delete${this.props.chat._id}`}
+              id={`delete${this.props.chat._id || this.props.chat.chatId}`}
               onClick={removeChat}
             >
               <i className="fa fa-minus-circle fa-3x"></i>

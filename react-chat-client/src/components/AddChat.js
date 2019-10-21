@@ -30,6 +30,9 @@ export default class AddChat extends React.Component {
     if (e.keyCode === 13 && e.shiftKey) {
       e.preventDefault();
       this.formRef.click();
+    } else {
+      if (this.state.message.length > 0) this.props.setTyper(this.state.sender || '');
+      else this.props.setTyper(null);
     }
   };
 
@@ -66,6 +69,7 @@ export default class AddChat extends React.Component {
                   placeholder="Your name"
                   value={this.state.sender}
                   onKeyUp={this.onEnterPress}
+                  maxLength="25"
                 />
               </div>
             </div>

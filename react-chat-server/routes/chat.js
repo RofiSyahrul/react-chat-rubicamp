@@ -24,8 +24,8 @@ router.get("/", (req, res) => {
 
 // add chat
 router.post("/", (req, res) => {
-  const { sender, message } = req.body;
-  let chat = new Chat({ sender, message });
+  const { sender, message, chatId } = req.body;
+  let chat = new Chat({ sender, message, chatId });
   chat.save(err => {
     if (err) console.error(err);
     else {

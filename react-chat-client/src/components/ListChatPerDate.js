@@ -8,7 +8,7 @@ export default class ListChatPerDate extends React.Component {
   render() {
     let items = this.props.chats.map((chat, i) => (
       <ChatItem
-        key={chat._id}
+        key={chat._id || chat.chatId}
         color={colors[i % 4]}
         chat={chat}
         remove={this.props.remove}
