@@ -88,3 +88,23 @@ function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
+
+const io = require("socket.io")(server);
+
+io.on("connection", socket => {
+  socket.on("new chat", data => {
+    socket.broadcast.emit("new chat", data);
+  });
+
+  socket.on("delete chat", id => {
+    socket.broadcast.emit("delete chat", id);
+  });
+
+  socket.on("key up", typer => {
+    socket.broadcast.emit("key up", typer);
+  });
+
+  socket.on("new chat failed", id => {
+    socket.broadcast.emit("new chat failed", id);
+  });
+});
