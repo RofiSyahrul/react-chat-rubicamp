@@ -5,7 +5,7 @@ import ListChat from "./ListChat";
 import AddChat from "./AddChat";
 import { formatTime, groupChats } from "../helpers";
 import io from "socket.io-client";
-const socket = io("http://localhost:8000");
+const socket = io("http://localhost:3001");
 
 const swalWithBootstrapButtons = Swal.mixin({
   customClass: {
@@ -30,8 +30,9 @@ export default class ReactChat extends React.Component {
       this.delChatClient(id);
     });
 
-    socket.on("new chat", (id, sender, message) => {
-      this.addChatClient(id, sender, message);
+    socket.on("new chat", data => {
+      const { chatId, sender, message } = data;
+      this.addChatClient(chatId, sender, message);
     });
 
     socket.on("key up", typer => {
@@ -40,10 +41,15 @@ export default class ReactChat extends React.Component {
         this.setState({ typerExist: true, typer });
       } else this.setState({ typerExist: false, typer: "" });
     });
+
+    socket.on("new chat failed", id => {
+      this.addChatFailedClient(id);
+    });
   }
 
-  componentDidUpdate() {
-    this.scrollToBottom();
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.chats.length < this.state.chats.length)
+      this.scrollToBottom();
   }
 
   getChats = () => {
@@ -51,19 +57,26 @@ export default class ReactChat extends React.Component {
       .get("http://localhost:3001/api/chat")
       .then(res => {
         // copying strategy: https://stackoverflow.com/questions/47624142/right-way-to-clone-objects-arrays-during-setstate-in-react
-        this.setState({ chats: res.data });
-        let copiedChats = JSON.parse(JSON.stringify(res.data));
-        this.setState({ chatsPerDate: groupChats(copiedChats) });
+        this.setState(() => {
+          let chats = res.data.map(chat => {
+            chat.sent = true;
+            return chat;
+          });
+          let copiedChats = JSON.parse(JSON.stringify(chats));
+          return { chats, chatsPerDate: groupChats(copiedChats) };
+        });
       })
       .catch(err => console.error(err));
   };
 
   delChatClient = id => {
-    this.setState(state => ({
-      chats: state.chats.filter(chat => chat._id !== id && chat.chatId !== id)
-    }));
-    let copiedChats = JSON.parse(JSON.stringify(this.state.chats));
-    this.setState({ chatsPerDate: groupChats(copiedChats) });
+    this.setState(state => {
+      let chats = state.chats.filter(
+        chat => chat._id !== id && chat.chatId !== id
+      );
+      let copiedChats = JSON.parse(JSON.stringify(chats));
+      return { chats, chatsPerDate: groupChats(copiedChats) };
+    });
   };
 
   deleteChat = id => {
@@ -79,6 +92,7 @@ export default class ReactChat extends React.Component {
       })
       .then(result => {
         if (result.value) {
+          this.delChatClient(id);
           socket.emit("delete chat", id);
           axios
             .delete("http://localhost:3001/api/chat/" + id)
@@ -87,9 +101,8 @@ export default class ReactChat extends React.Component {
                 title: "Deleted!",
                 text: res.data.message,
                 type: "success",
-                timer: 2000
+                timer: 1000
               });
-              // subscribeChatHistory(this.getChats)
             })
             .catch(err => console.error(err));
         } else if (result.dismiss === Swal.DismissReason.cancel) {
@@ -103,34 +116,67 @@ export default class ReactChat extends React.Component {
       });
   };
 
-  addChatClient = (id = 0, sender = "", message = "") => {
-    let newChat = {
-      chatId: id,
-      sender,
-      message,
-      time: new Date().toString()
-    };
-    this.setState(state => ({
-      chats: [...state.chats, formatTime(newChat)]
-    }));
-    let copiedChats = JSON.parse(JSON.stringify(this.state.chats));
-    this.setState({ chatsPerDate: groupChats(copiedChats) });
+  addChatClient = (id = 0, sender = "", message = "", idDeleted) => {
+    this.setState(state => {
+      let chats = state.chats;
+      if (idDeleted)
+        chats = state.chats.filter(chat => chat.chatId !== idDeleted);
+      let newChat = {
+        chatId: id,
+        sender,
+        message,
+        sent: true,
+        time: new Date().toString()
+      };
+      chats = [...chats, formatTime(newChat)];
+      let copiedChats = JSON.parse(JSON.stringify(chats));
+      return { chats, chatsPerDate: groupChats(copiedChats) };
+    });
   };
 
-  addChat = (sender = "", message = "") => {
+  addChatFailed = (id = 0) => {
+    this.setState(state => {
+      let chats = state.chats.map(chat => {
+        if (chat.chatId === id) chat.sent = false;
+        return chat;
+      });
+      let copiedChats = JSON.parse(JSON.stringify(chats));
+      return { chats, chatsPerDate: groupChats(copiedChats) };
+    });
+  };
+
+  addChatFailedClient = () => {
+    this.setState(state => {
+      let chats = state.chats;
+      chats = chats.filter(chat => chat.sent);
+      let copiedChats = JSON.parse(JSON.stringify(chats));
+      return { chats, chatsPerDate: groupChats(copiedChats) };
+    });
+  };
+
+  addChat = (sender = "", message = "", idDeleted) => {
     if (sender.length > 0 && message.length > 0) {
       let chatId = Date.now();
-      socket.emit("new chat", chatId, sender, message);
+      this.addChatClient(chatId, sender, message, idDeleted);
+      socket.emit("new chat", { chatId, sender, message });
       axios
         .post("http://localhost:3001/api/chat", { sender, message, chatId })
         .then(() => {})
-        .catch(err => console.error(err));
+        .catch(err => {
+          this.addChatFailed(chatId);
+          socket.emit("new chat failed", chatId);
+        });
     } else {
       Swal.fire({
         title: "Message or sender cannot be empty",
         type: "error"
       });
     }
+  };
+
+  resendChat = (chat = {}) => {
+    const { sender, message, chatId } = chat;
+    this.addChat(sender, message, chatId);
   };
 
   setTyper = typer => {
@@ -184,6 +230,7 @@ export default class ReactChat extends React.Component {
               chatsPerDate={this.state.chatsPerDate}
               endRef={this.setEndRef}
               remove={this.deleteChat}
+              resend={this.resendChat}
             />
             <AddChat addChat={this.addChat} setTyper={this.setTyper} />
           </div>

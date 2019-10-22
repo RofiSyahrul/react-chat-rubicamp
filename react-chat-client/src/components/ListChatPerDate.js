@@ -12,6 +12,7 @@ export default class ListChatPerDate extends React.Component {
         color={colors[i % 4]}
         chat={chat}
         remove={this.props.remove}
+        resend={this.props.resend}
       />
     ));
 

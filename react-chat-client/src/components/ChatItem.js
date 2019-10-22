@@ -4,10 +4,12 @@ import "./ReactChat.css";
 
 class ChatItem extends React.Component {
   render() {
+    const { _id, chatId, sender, sent, time, message } = this.props.chat;
+
     const removeChat = e => {
       e.preventDefault();
-      const id = e.target.parentElement.getAttribute("id");
-      this.props.remove(id.slice(6));
+      let id = _id || chatId;
+      this.props.remove(id);
     };
 
     return (
@@ -17,7 +19,6 @@ class ChatItem extends React.Component {
             <button
               type="button"
               className={`${this.props.color} btn bg-transparent`}
-              id={`delete${this.props.chat._id || this.props.chat.chatId}`}
               onClick={removeChat}
             >
               <i className="fa fa-minus-circle fa-3x"></i>
@@ -26,15 +27,27 @@ class ChatItem extends React.Component {
           <div className="col-9 col-sm-9 col-md-10 col-lg-11 ml-3 ml-sm-0 speech-bubble">
             <div className="row justify-content-between sender mt-2">
               <div className="col-auto">
-                <ReactMarkdown source={this.props.chat.sender} className={this.props.color} />
+                <ReactMarkdown source={sender} className={this.props.color} />
               </div>
               <div className="col-auto text-secondary">
-                {this.props.chat.time}
+                {sent ? time : `Connection error `}
+                {!sent ? (
+                  <button
+                    type="button"
+                    className="btn text-secondary bg-transparent"
+                    onClick={() => this.props.resend(this.props.chat)}
+                    style={{ marginTop: "-0.5rem" }}
+                  >
+                    <i className="fa fa-refresh"></i>
+                  </button>
+                ) : (
+                  ""
+                )}
               </div>
             </div>
             <div className="row mb-1">
               <div className="col-12 chat-message">
-                <ReactMarkdown source={this.props.chat.message} />
+                <ReactMarkdown source={message} />
               </div>
             </div>
           </div>

@@ -10,6 +10,7 @@ export default class ListChat extends React.Component {
         date={item.date}
         chats={item.chats}
         remove={this.props.remove}
+        resend={this.props.resend}
       />
     ));
     if (components.length === 0)
@@ -18,6 +19,7 @@ export default class ListChat extends React.Component {
           date="No chats"
           chats={[]}
           remove={this.props.remove}
+          resend={this.props.resend}
         />
       );
 
