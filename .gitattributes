@@ -1,13 +1,15 @@
-*.css           text diff=css
-*.df            text
-*.htm           text diff=html
-*.html          text diff=html
-*.js            text
-*.jsp           text
-*.jspf          text
-*.jspx          text
-*.properties    text
-*.tld           text
-*.tag           text
-*.tagx          text
-*.xml           text
+*.bash            text eol=lf
+*.bat             text eol=crlf
+*.cmd             text eol=crlf
+*.coffee          text
+*.css             text
+*.htm             text diff=html
+*.html            text diff=html
+*.inc             text
+*.ini             text
+*.js              text diff=js
+*.json            text
+*.jsx             text
+*.less            text
+*.ls              text
+*.map             text -diff
