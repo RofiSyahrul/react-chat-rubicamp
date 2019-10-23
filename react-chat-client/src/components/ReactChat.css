@@ -1,0 +1,53 @@
+.borderless {
+  border: 0 none;
+}
+
+.border {
+  border: 1px solid mediumturquoise;
+  border-radius: 0.5rem;
+}
+
+.hr-line-middle {
+  width: 100%;
+  text-align: center;
+  border-bottom: 1px solid #9f9f9f;
+  line-height: 0.1em;
+  margin: 10px 0 20px;
+}
+
+.hr-line-middle span {
+  background: #dfdfdf;
+  padding: 0 10px;
+}
+
+.sender {
+  font-size: 0.7rem;
+}
+
+.chat-message {
+  white-space: pre-line;
+}
+
+/* https://leaverou.github.io/bubbly/ */
+.speech-bubble {
+	position: relative;
+	background: #fefefe;
+  border-radius: .4em;
+  height: auto;
+  border: 0.1em solid transparent;
+}
+
+.speech-bubble:after {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 50%;
+	width: 0;
+	height: 0;
+	border: 0.875em solid transparent;
+	border-right-color: #fefefe;
+	border-left: 0;
+	border-bottom: 0;
+	margin-top: -0.475em;
+	margin-left: -0.9em;
+}
